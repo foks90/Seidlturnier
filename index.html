@@ -291,27 +291,18 @@ function setSave(state, txt){
 }
 
 async function saveState(){
+  const APPS_SCRIPT_URL="https://script.google.com/macros/s/AKfycbzv2cpJvk5iZVQd3GcuLFbooo7ffg0Ha0vRvMpNNUTAmGWzqvWlPVM1hHibyZoYxxKE/exec";
   setSave('saving','Speichere...');
   const json = JSON.stringify(S);
-  const escaped = json.replace(/'/g,"\\'");
   try{
-    const url = `https://sheets.googleapis.com/v4/spreadsheets/${CFG.sheetId}/values/TurnierDaten!A1?valueInputOption=RAW&key=${CFG.apiKey}`;
-    const res = await fetch(url, {
-      method:'PUT',
-      headers:{'Content-Type':'application/json'},
-      body: JSON.stringify({range:'TurnierDaten!A1', majorDimension:'ROWS', values:[[json]]})
+    await fetch(APPS_SCRIPT_URL, {
+      method:'POST',
+      mode:'no-cors',
+      body: JSON.stringify({sheetId: CFG.sheetId, value: json})
     });
-    if(res.status===401||res.status===403){
-      setSave('err','Keine Schreibberechtigung — OAuth nötig');
-    } else if(res.ok){
-      setSave('ok','Gespeichert ✓');
-    } else {
-      const err = await res.json();
-      setSave('err', err.error?.message||'Fehler');
-    }
+    setSave('ok','Gespeichert ✓');
   }catch(e){ setSave('err','Netzwerkfehler'); }
 }
-
 async function loadState(){
   try{
     const url = `https://sheets.googleapis.com/v4/spreadsheets/${CFG.sheetId}/values/TurnierDaten!A1?key=${CFG.apiKey}`;
